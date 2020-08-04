@@ -39,7 +39,9 @@ module Optcarrot
     }
 
     # A look-up table mapping: (two pattern bytes * attr) -> eight pixels
-    #   TILE_LUT[attr][high_byte * 0x100 + low_byte] = [pixels] * 8
+    #TILE_LUT[attr][high_byte * 0x100 + low_byte] = [pixels] * 8
+    TILE_LUT = [[[0], [0]], [[0], [0]], [[0], [0]], [[0], [0]]] ## had to do this ugly type cast hack, cause actually loading the array into memory would crash the program
+=begin
     TILE_LUT = [0x0, 0x4, 0x8, 0xc].map do |attr|
       (0..7).map do |j|
         (0...0x10000).map do |i|
@@ -50,7 +52,7 @@ module Optcarrot
       # Super dirty hack: This Array#transpose reduces page-faults.
       # It might generate cache-friendly memory layout...
     end
-
+=end
     def inspect
       "#<#{ self.class }>"
     end
@@ -181,7 +183,7 @@ module Optcarrot
       @sp_buffer = [0] * @sp_limit
       @sp_buffered = 0
       @sp_visible = false
-      @sp_map = [nil] * 264 # [[behind?, zero?, color]]
+      @sp_map = RDL.type_cast([nil] * 264, "Array<Array<%bool or Integer>>") # [[behind?, zero?, color]]
       @sp_map_buffer = (0...264).map { [false, false, 0] } # preallocation for @sp_map
       @sp_zero_in_line = false
     end
@@ -193,7 +195,7 @@ module Optcarrot
     end
 
     def setup_lut
-      @lut_update = {}.compare_by_identity
+      @lut_update = {}
 
       @name_lut = (0..0xffff).map do |i|
         nmt_bank = @nmt_ref[i >> 10 & 3]
@@ -288,7 +290,7 @@ module Optcarrot
         end
       elsif @scroll_addr_0_4 < 0x1f
         @scroll_addr_0_4 += 1
-      else
+p      else
         @scroll_addr_0_4 = 0
         @scroll_addr_5_14 += 0x20
       end
@@ -316,9 +318,9 @@ module Optcarrot
 
     def make_sure_invariants
       @name_io_addr = (@scroll_addr_0_4 | @scroll_addr_5_14) & 0x0fff | 0x2000
-      @bg_pattern_lut_fetched = TILE_LUT[
-        @nmt_ref[@io_addr >> 10 & 3][@io_addr & 0x03ff] >> ((@scroll_addr_0_4 & 0x2) | (@scroll_addr_5_14[6] * 0x4)) & 3
-      ]
+      @bg_pattern_lut_fetched = RDL.type_cast(TILE_LUT[
+                                                @nmt_ref[RDL.type_cast(@io_addr >> 10 & 3, "Integer")][RDL.type_cast(@io_addr & 0x03ff, "Integer")] >> ((@scroll_addr_0_4 & 0x2) | (@scroll_addr_5_14[6] * 0x4)) & 3
+                                              ], "Array<Array<Integer>>")
     end
 
     def io_latch_mask(data)
@@ -473,7 +475,7 @@ module Optcarrot
       else
         addr &= 0x3fff
         if addr >= 0x2000
-          nmt_bank = @nmt_ref[addr >> 10 & 0x3]
+          nmt_bank = RDL.type_cast(@nmt_ref[addr >> 10 & 0x3], "Array<Integer>")
           nmt_idx = addr & 0x03ff
           if nmt_bank[nmt_idx] != data
             nmt_bank[nmt_idx] = data
@@ -570,7 +572,7 @@ module Optcarrot
         x = x_base + dx
         clr = (pat >> (pos[dx] * 2)) & 3
         next if @sp_map[x] || clr == 0
-        @sp_map[x] = sprite = @sp_map_buffer[x]
+        @sp_map[x] = sprite = RDL.type_cast(@sp_map_buffer[x], "Array<%bool or Integer>")
         # sprite[0]: behind flag, sprite[1]: zero hit flag, sprite[2]: color
         sprite[0] = byte2[5] == 1 # OAM byte2 bit5: "Behind background" flag
         sprite[1] = buffer_idx == 0 && @sp_zero_in_line
@@ -803,7 +805,7 @@ module Optcarrot
     def render_pixel
       if @any_show
         pixel = @bg_enabled ? @bg_pixels[@hclk % 8] : 0
-        if @sp_active && (sprite = @sp_map[@hclk])
+        if @sp_active && (sprite = RDL.type_cast(@sp_map[@hclk], "Integer"))
           if pixel % 4 == 0
             pixel = sprite[2]
           else

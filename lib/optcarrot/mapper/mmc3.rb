@@ -10,7 +10,7 @@ module Optcarrot
       @prg_bank_swap = false
 
       @chr_banks = @chr_banks.flatten.each_slice(0x0400).to_a
-      @chr_bank_mapping = [nil] * 8
+      @chr_bank_mapping = RDL.type_cast([nil] * 8, "Array<Integer>")
       @chr_bank_swap = false
     end
 

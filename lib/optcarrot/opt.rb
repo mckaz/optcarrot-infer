@@ -86,7 +86,7 @@ module Optcarrot
       code.gsub(/^( *)\b(#{ meths * "|" })\b(?:\((.*?)\))?\n/) do
         indent, meth, args = $1, $2, $3
         body = mdefs[meth.to_sym]
-        body = body.body if body.is_a?(MethodDef)
+        body = RDL.type_cast(body, "Optcarrot::CodeOptimizationHelper::MethodDef").body if body.is_a?(MethodDef)
         if args
           mdefs[meth.to_sym].params.zip(args.split(", ")) do |param, arg|
             body = replace_var(body, param, arg)

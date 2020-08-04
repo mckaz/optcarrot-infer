@@ -48,14 +48,14 @@ module Optcarrot
       out[256] # clear code
       data.each do |d|
         if cur_dict[d]
-          code, cur_dict = cur_dict[d]
+          code, cur_dict = RDL.type_cast(cur_dict[d], "[Number, []]")
         else
           out[code]
           if max_code < 4094
             max_code += 1
             cur_dict[d] = [max_code, []]
           end
-          code, cur_dict = dict[d]
+          code, cur_dict = RDL.type_cast(dict[d], "[Number, []]")
         end
       end
       out[code]

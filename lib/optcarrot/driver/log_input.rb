@@ -3,7 +3,7 @@ module Optcarrot
   class LogInput < Input
     def init
       @log = @conf.key_log || []
-      @log = Marshal.load(File.binread(@log)) if @log.is_a?(String)
+      @log = RDL.type_cast(Marshal.load(File.binread(RDL.type_cast(@log, "String"))), "String") if @log.is_a?(String)
       @prev_state = 0
     end
 

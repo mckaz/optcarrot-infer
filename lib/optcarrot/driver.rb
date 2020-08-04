@@ -42,7 +42,7 @@ module Optcarrot
         raise "unknown #{ type } driver: #{ name }" unless klass
         require_relative "driver/#{ name }_#{ type }" unless name == :none
         conf.debug("`#{ name }' #{ type } driver is selected")
-        Optcarrot.const_get(klass)
+        RDL.type_cast(Optcarrot.const_get(klass), "Class")
       else
         selected = nil
         DRIVER_DB[type].each_key do |n|

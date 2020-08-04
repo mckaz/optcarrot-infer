@@ -4,7 +4,7 @@ module Optcarrot
   # A minimal binding for libao
   module Ao
     extend FFI::Library
-    ffi_lib "ao"
+    #ffi_lib "ao" # RDL.type_cast: no library called 'ao', so commenting that out here.
 
     # struct ao_sample_format
     class SampleFormat < FFI::Struct

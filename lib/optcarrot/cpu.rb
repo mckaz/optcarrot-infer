@@ -31,8 +31,8 @@ module Optcarrot
       end
 
       # main memory
-      @fetch = [nil] * 0x10000
-      @store = [nil] * 0x10000
+      @fetch = RDL.type_cast([nil] * 0x10000, "Array<Method or Array<Integer>>")
+      @store = RDL.type_cast([nil] * 0x10000, "Array<Method>")
       @peeks = {}
       @pokes = {}
       @ram = [0] * 0x800
@@ -114,7 +114,7 @@ module Optcarrot
       peek = @peeks[peek] ||= peek
       poke = @pokes[poke] ||= poke
 
-      (addr.is_a?(Integer) ? [addr] : addr).each do |a|
+      RDL.type_cast((addr.is_a?(Integer) ? [addr] : addr), "Array<Integer>").each do |a|
         @fetch[a] = peek
         @store[a] = poke || PokeNop
       end
@@ -936,7 +936,7 @@ module Optcarrot
 
           @_pc += 1
 
-          send(*DISPATCH[@opcode])
+          send(*RDL.type_cast(DISPATCH[@opcode], "[Symbol, Integer]"))
 
           @ppu.sync(@clk) if @ppu_sync
         end while @clk < @clk_target

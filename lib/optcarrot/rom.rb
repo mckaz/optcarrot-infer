@@ -13,7 +13,7 @@ module Optcarrot
       require "zlib"
       bin = File.binread(filename)
       loop do
-        sig, _, flags, comp, _, _, _, data_len, _, fn_len, ext_len = bin.slice!(0, 30).unpack("a4v5V3v2")
+        sig, _, flags, comp, _, _, _, data_len, _, fn_len, ext_len = RDL.type_cast(bin.slice!(0, 30).unpack("a4v5V3v2"), "[String, %any, Integer, Integer, %any, %any, %any, Integer, %any, Integer, Integer]")
         break if sig != "PK\3\4".b
         fn = bin.slice!(0, fn_len)
         bin.slice!(0, ext_len)

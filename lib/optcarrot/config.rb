@@ -123,7 +123,7 @@ module Optcarrot
           opts.each do |id_base, opt|
             [id_base, *opt[:aliases]].each do |id|
               id = id.to_s.tr("_", "-")
-              return opt, id_base if id.size == 1 && arg == "-#{ id }"
+              return opt, id_base if RDL.type_cast(id, "Symbol").size == 1 && arg == "-#{ id }"
               return opt, id_base if arg == "--#{ id }"
               return opt, id_base, true if opt[:type] == :switch && arg == "--no-#{ id }"
             end
@@ -169,13 +169,13 @@ module Optcarrot
         operand ||= @argv.shift
         case type
         when :opts
-          operand = operand.split(",").map {|s| s.to_sym }
+          operand = RDL.type_cast(operand, "String").split(",").map {|s| s.to_sym }
         when :driver
-          operand = operand.to_sym
+          operand = RDL.type_cast(operand, "Symbol").to_sym
           error "unknown driver: `#{ operand }'" unless opt[:candidates].include?(operand)
         when :int
           begin
-            operand = Integer(operand)
+            operand = Integer(RDL.type_cast(operand, "Integer"))
           rescue
             error "option `#{ arg }' requires numerical operand"
           end
@@ -196,14 +196,14 @@ module Optcarrot
             when :opts   then args = "=OPTS,..."
             when :driver then args = "=DRIVER"
             when :int    then args = "=N"
-            when String  then args = "=" + opt[:type]
+            when String  then args = "=" + RDL.type_cast(opt[:type], "String")
             end
-            short_name = "-#{ switch }#{ short_name }, " if short_name && short_name.size == 1
+            short_name = "-#{ switch }#{ short_name }, " if short_name && RDL.type_cast(short_name, "Symbol").size == 1
             long_name = "--" + switch + id_base.to_s.tr("_", "-") + args
             if opt[:shortcut]
               desc = "same as `#{ [*opt[:shortcut]].join(" ") }'"
             else
-              desc = opt[:desc]
+              desc = RDL.type_cast(opt[:desc], "String")
               desc += " (default: #{ opt[:default] || "none" })" if opt.key?(:default)
             end
             long_name_width = [long_name_width, long_name.size].max
@@ -214,7 +214,7 @@ module Optcarrot
           if arg.is_a?(String)
             puts arg
           else
-            short_name, long_name, desc = arg
+            short_name, long_name, desc = RDL.type_cast(arg, "Array<Symbol or String>")
             puts "    %4s%-*s %s" % [short_name, long_name_width, long_name, desc]
           end
         end

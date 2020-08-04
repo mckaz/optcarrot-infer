@@ -38,6 +38,7 @@ module Optcarrot
     def nestopia_palette
       (0..511).map do |n|
         tint, level, color = n >> 6 & 7, n >> 4 & 3, n & 0x0f
+        #level0, level1 = RDL.type_cast([[-0.12, 0.40], [0.00, 0.68], [0.31, 1.00], [0.72, 1.00]][level], "[Integer, Integer]")
         level0, level1 = [[-0.12, 0.40], [0.00, 0.68], [0.31, 1.00], [0.72, 1.00]][level]
         level0 = level1 if color == 0x00
         level1 = level0 if color == 0x0d
